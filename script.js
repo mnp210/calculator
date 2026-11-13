@@ -233,6 +233,53 @@ function clearCalculator() {
   setActiveOperatorHighlight(null);
 }
 
+// 10. Backspace Handler
+function handleBackspace() {
+  if (hasError) {
+    clearCalculator();
+    return;
+  }
+
+  if (shouldResetDisplay) {
+    return;
+  }
+
+  const current = displayCurrent.textContent;
+  if (current.length <= 1 || (current.length === 2 && current.startsWith("-"))) {
+    displayCurrent.textContent = "0";
+  } else {
+    displayCurrent.textContent = current.slice(0, -1);
+  }
+}
+
+// 11. Decimal Handler
+function inputDecimal() {
+  if (hasError) {
+    clearCalculator();
+    displayCurrent.textContent = "0.";
+    return;
+  }
+
+  if (shouldResetDisplay) {
+    displayCurrent.textContent = "0.";
+    shouldResetDisplay = false;
+    if (operator === null) {
+      displayHistory.innerHTML = "&nbsp;";
+      firstNumber = null;
+    }
+    setActiveOperatorHighlight(null);
+    return;
+  }
+
+  // Prevent multiple decimal separators in the current number
+  if (displayCurrent.textContent.includes(".")) {
+    return;
+  }
+
+  displayCurrent.textContent += ".";
+  setActiveOperatorHighlight(null);
+}
+
 // Initialise DOM and Event Listeners
 function init() {
   displayCurrent = document.getElementById("display-current");
@@ -264,6 +311,18 @@ function init() {
   if (clearButton) {
     clearButton.addEventListener("click", clearCalculator);
   }
+
+  // Backspace button
+  const backspaceButton = document.getElementById("btn-backspace");
+  if (backspaceButton) {
+    backspaceButton.addEventListener("click", handleBackspace);
+  }
+
+  // Decimal button
+  const decimalButton = document.getElementById("btn-decimal");
+  if (decimalButton) {
+    decimalButton.addEventListener("click", inputDecimal);
+  }
 }
 
 if (typeof document !== "undefined") {
@@ -285,6 +344,8 @@ if (typeof module !== "undefined" && module.exports) {
     inputDigit,
     inputOperator,
     handleEquals,
-    clearCalculator
+    clearCalculator,
+    handleBackspace,
+    inputDecimal
   };
 }
