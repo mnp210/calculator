@@ -280,6 +280,47 @@ function inputDecimal() {
   setActiveOperatorHighlight(null);
 }
 
+// 12. Keyboard Event Handler
+function handleKeyboardInput(e) {
+  const key = e.key;
+  let targetButton = null;
+
+  if (key >= "0" && key <= "9") {
+    inputDigit(key);
+    targetButton = document.querySelector(`[data-digit="${key}"]`);
+  } else if (key === "+" || key === "-" || key === "*" || key === "/") {
+    if (typeof e.preventDefault === "function") e.preventDefault();
+    inputOperator(key);
+    targetButton = document.querySelector(`[data-operator="${key}"]`);
+  } else if (key === "x" || key === "X") {
+    inputOperator("*");
+    targetButton = document.querySelector(`[data-operator="*"]`);
+  } else if (key === "Enter" || key === "=") {
+    if (typeof e.preventDefault === "function") e.preventDefault();
+    handleEquals();
+    targetButton = document.getElementById("btn-equals");
+  } else if (key === "Backspace") {
+    if (typeof e.preventDefault === "function") e.preventDefault();
+    handleBackspace();
+    targetButton = document.getElementById("btn-backspace");
+  } else if (key === "Escape" || key === "Delete") {
+    if (typeof e.preventDefault === "function") e.preventDefault();
+    clearCalculator();
+    targetButton = document.getElementById("btn-clear");
+  } else if (key === ".") {
+    inputDecimal();
+    targetButton = document.getElementById("btn-decimal");
+  }
+
+  // Visual tactile feedback on button press
+  if (targetButton) {
+    targetButton.classList.add("is-active");
+    setTimeout(() => {
+      targetButton.classList.remove("is-active");
+    }, 120);
+  }
+}
+
 // Initialise DOM and Event Listeners
 function init() {
   displayCurrent = document.getElementById("display-current");
@@ -323,6 +364,9 @@ function init() {
   if (decimalButton) {
     decimalButton.addEventListener("click", inputDecimal);
   }
+
+  // Global Keyboard listener
+  window.addEventListener("keydown", handleKeyboardInput);
 }
 
 if (typeof document !== "undefined") {
@@ -346,6 +390,7 @@ if (typeof module !== "undefined" && module.exports) {
     handleEquals,
     clearCalculator,
     handleBackspace,
-    inputDecimal
+    inputDecimal,
+    handleKeyboardInput
   };
 }
