@@ -346,6 +346,108 @@ function runTests() {
   assert.strictEqual(dom.elements["display-current"].textContent, "0", "Delete key clears calculator");
 
   console.log("✓ Keyboard events passed");
+
+  console.log("=== 8. Testing Accessibility aria-keyshortcuts Metadata ===");
+  const htmlPath = path.join(__dirname, "../index.html");
+  assert.ok(fs.existsSync(htmlPath), "index.html exists");
+  const htmlContent = fs.readFileSync(htmlPath, "utf8");
+
+  // Helper to extract attribute for an element matching a selector fragment
+  function extractAttribute(html, selectorFragment, attrName) {
+    const pattern = new RegExp(`<button[^>]*?${selectorFragment}[^>]*?>`, "i");
+    const match = html.match(pattern);
+    if (!match) return null;
+    const tag = match[0];
+    const attrMatch = tag.match(new RegExp(`${attrName}="([^"]*)"`, "i"));
+    return attrMatch ? attrMatch[1] : null;
+  }
+
+  // 1. Verify specific functional control shortcuts metadata
+  const expectedFunctionalShortcuts = {
+    'id="btn-clear"': "Escape Delete",
+    'id="btn-backspace"': "Backspace",
+    'id="btn-divide"': "/",
+    'id="btn-multiply"': "* x X",
+    'id="btn-subtract"': "-",
+    'id="btn-add"': "+",
+    'id="btn-decimal"': ".",
+    'id="btn-equals"': "Enter ="
+  };
+
+  for (const [selector, expected] of Object.entries(expectedFunctionalShortcuts)) {
+    const actual = extractAttribute(htmlContent, selector, "aria-keyshortcuts");
+    assert.strictEqual(
+      actual,
+      expected,
+      `${selector} aria-keyshortcuts should be "${expected}" (was "${actual}")`
+    );
+  }
+
+  // 2. Verify digit buttons retain accessible labels and omit aria-keyshortcuts (for screen reader minimalism)
+  const expectedDigitLabels = {
+    0: "Zero",
+    1: "One",
+    2: "Two",
+    3: "Three",
+    4: "Four",
+    5: "Five",
+    6: "Six",
+    7: "Seven",
+    8: "Eight",
+    9: "Nine"
+  };
+
+  for (let digit = 0; digit <= 9; digit++) {
+    const selector = `data-digit="${digit}"`;
+    const shortcut = extractAttribute(htmlContent, selector, "aria-keyshortcuts");
+    assert.strictEqual(
+      shortcut,
+      null,
+      `${selector} should not declare aria-keyshortcuts to avoid screen reader verbosity`
+    );
+
+    const label = extractAttribute(htmlContent, selector, "aria-label");
+    assert.strictEqual(
+      label,
+      expectedDigitLabels[digit],
+      `${selector} should retain aria-label="${expectedDigitLabels[digit]}"`
+    );
+  }
+
+  // 3. Verify that all shortcuts declared in aria-keyshortcuts are genuinely supported
+  // Multiplication via 'x' and 'X'
+  calc.clearCalculator();
+  triggerKey("4");
+  triggerKey("x");
+  triggerKey("5");
+  triggerKey("Enter");
+  assert.strictEqual(dom.elements["display-current"].textContent, "20", "Key 'x' triggers multiplication");
+
+  calc.clearCalculator();
+  triggerKey("7");
+  triggerKey("X");
+  triggerKey("3");
+  triggerKey("=");
+  assert.strictEqual(dom.elements["display-current"].textContent, "21", "Key 'X' triggers multiplication");
+
+  // Equals via '='
+  calc.clearCalculator();
+  triggerKey("8");
+  triggerKey("+");
+  triggerKey("2");
+  triggerKey("=");
+  assert.strictEqual(dom.elements["display-current"].textContent, "10", "Key '=' evaluates expression");
+
+  // Clear via 'Escape' and 'Delete'
+  triggerKey("9");
+  triggerKey("Escape");
+  assert.strictEqual(dom.elements["display-current"].textContent, "0", "Key 'Escape' clears calculator");
+
+  triggerKey("9");
+  triggerKey("Delete");
+  assert.strictEqual(dom.elements["display-current"].textContent, "0", "Key 'Delete' clears calculator");
+
+  console.log("✓ Accessibility aria-keyshortcuts metadata and handlers verified");
   console.log("\n==========================================");
   console.log("ALL TESTS PASSED SUCCESSFULLY! (100% PASS)");
   console.log("==========================================");
