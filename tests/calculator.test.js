@@ -369,7 +369,7 @@ function runTests() {
     'id="btn-divide"': "/",
     'id="btn-multiply"': "* x X",
     'id="btn-subtract"': "-",
-    'id="btn-add"': "+",
+    'id="btn-add"': "Plus",
     'id="btn-decimal"': ".",
     'id="btn-equals"': "Enter ="
   };
